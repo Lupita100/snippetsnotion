@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería de Imágenes Minimalista</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 100vh; /* Altura de la ventana */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; /* Importante para que las imágenes no se desborden */
+        }
+
+        .slider {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            transition: transform 0.5s ease-in-out; /* Transición suave del deslizamiento */
+        }
+
+        .slide {
+            flex: 0 0 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;/* Asegura que la imagen se ajuste al contenedor */
+        }
+
+        .slide img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: fill; /* Esto es clave para mantener la proporción y ajustar la imagen */
+        }
+
+        .controls {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            opacity: 0; /* Inicialmente ocultos */
+            transition: opacity 0.3s ease; /* Transición suave de la opacidad */
+        }
+
+        .slider-container:hover .controls {
+            opacity: 1; /* Se muestran al pasar el mouse sobre el contenedor */
+        }
+
+
+        .control-button {
+            background-color: rgba(255, 255, 255, 0.7); /* Fondo blanco con opacidad */
+            color: #333; /* Color de texto oscuro */
+            border: none;
+            padding: 10px 15px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.2s ease; /* Transición suave del fondo */
+        }
+
+        .control-button:hover {
+            background-color: rgba(255, 255, 255, 0.9); /* Fondo un poco más claro al pasar el mouse */
+        }
+
+        .control-button:disabled {
+            background-color: rgba(255, 255, 255, 0.5); /* Fondo más claro para botones deshabilitados */
+            color: #aaa; /* Texto más claro para botones deshabilitados */
+            cursor: not-allowed;
+        }
+
+        #prev-btn {
+            margin-left: 10px;
+        }
+
+        #next-btn {
+            margin-right: 10px;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100"> <div class="slider-container">
+        <div class="slider">
+            <div class="slide">
+                <img src="https://d2pn8kiwq2w21t.cloudfront.net/images/jpegPIA26511.width-1600.jpg" alt="Imagen 1">
+            </div>
+            <div class="slide">
+                <img src="https://d2pn8kiwq2w21t.cloudfront.net/images/jpegPIA23865.width-1600.jpg" alt="Imagen 2">
+            </div>
+            <div class="slide">
+                <img src="https://i.imgur.com/WBBbals.jpeg" alt="Imagen 3">
+            </div>
+             <div class="slide">
+                <img src="https://i.imgur.com/tQqZJ2E.jpeg" alt="Imagen 4">
+            </div>
+            <div class="slide">
+                <img src="https://i.imgur.com/d4xbLPQ.png" alt="Imagen 5">
+            </div>
+            <div class="slide">
+                <img src="https://i.imgur.com/mmJd1X5.jpeg" alt="Imagen 6">
+            </div>
+            <div class="slide">
+                <img src="https://i.imgur.com/ndhLZLk.jpeg" alt="Imagen 7">
+            </div>
+            <div class="slide">
+                <img src="https://placehold.co/400x400/EEE/31343C" alt="Imagen 4">
+            </div>
+            <div class="slide">
+                <img src="https://placehold.co/400x400/EEE/31343C" alt="Imagen 4">
+            </div>
+            <div class="slide">
+                <img src="https://placehold.co/400x400/EEE/31343C" alt="Imagen 4">
+            </div>
+            <div class="slide">
+                <img src="https://placehold.co/400x400/EEE/31343C" alt="Imagen 4">
+            </div>
+        </div>
+        <div class="controls">
+            <button class="control-button" id="prev-btn">❮</button>
+            <button class="control-button" id="next-btn">❯</button>
+        </div>
+    </div>
+
+    <script>
+        const slider = document.querySelector('.slider');
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        let slideIndex = 0;
+
+        function updateButtons() {
+            prevBtn.disabled = slideIndex === 0;
+            nextBtn.disabled = slideIndex === slides.length - 1;
+        }
+
+        function showSlide(index) {
+            if (index < 0 || index >= slides.length) {
+                return; // Evita errores si el índice está fuera de rango
+            }
+            slider.style.transform = `translateX(${-index * 100}%)`;
+            slideIndex = index;
+            updateButtons();
+        }
+
+        function nextSlide() {
+            showSlide(slideIndex + 1);
+        }
+
+        function prevSlide() {
+            showSlide(slideIndex - 1);
+        }
+
+        prevBtn.addEventListener('click', prevSlide);
+        nextBtn.addEventListener('click', nextSlide);
+
+        // Mostrar la primera slide al cargar la página y habilitar/deshabilitar botones
+        showSlide(slideIndex);
+    </script>
+</body>
+</html>
