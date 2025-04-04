@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frases Motivacionales</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex justify-center items-center min-h-screen p-4">
+    <div class="bg-gray-800 rounded-lg shadow-md p-8 max-w-2xl w-full">
+        <p id="frase" class="text-2xl italic text-center mb-4"></p>
+        <p id="autor" class="text-md font-semibold text-gray-300 text-center"></p>
+    </div>
+
+    <script>
+        // Array de objetos con frases y autores
+        const frases = [
+            { frase: "La vida es lo que pasa mientras estás ocupado haciendo otros planes.", autor: "John Lennon" },
+            { frase: "El futuro pertenece a quienes creen en la belleza de sus sueños.", autor: "Eleanor Roosevelt" },
+            { frase: "No importa lo lento que vayas, siempre y cuando no te detengas.", autor: "Confucio" },
+            { frase: "Cree en ti mismo y en todo lo que eres. Sabes que hay algo dentro de ti que es más grande que cualquier obstáculo.", autor: "Christian D. Larson" },
+            { frase: "El éxito no es la clave de la felicidad. La felicidad es la clave del éxito. Si amas lo que haces, tendrás éxito.", autor: "Albert Schweitzer" },
+            { frase: "No te preocupes por los fracasos, preocúpate por las posibilidades que pierdes cuando ni siquiera lo intentas.", autor: "Jack Canfield" },
+            { frase: "La única manera de hacer un gran trabajo es amar lo que haces.", autor: "Steve Jobs" },
+            { frase: "La mayor gloria no está en no caer nunca, sino en levantarse cada vez que caemos.", autor: "Nelson Mandela" },
+            { frase: "Lo que no te mata te hace más fuerte.", autor: "Friedrich Nietzsche" },
+            { frase: "La vida es 10% lo que te sucede y 90% cómo reaccionas a ello.", autor: "Charles R. Swindoll" }
+        ];
+
+        // Función para mostrar una frase aleatoria
+        function mostrarFraseAleatoria() {
+            // Genera un índice aleatorio dentro del rango del array de frases
+            const indiceAleatorio = Math.floor(Math.random() * frases.length);
+            // Obtiene la frase y el autor correspondientes al índice aleatorio
+            const frase = frases[indiceAleatorio];
+            // Actualiza el contenido de los elementos HTML con la frase y el autor
+            document.getElementById("frase").textContent = frase.frase;
+            document.getElementById("autor").textContent = `- ${frase.autor}`;
+        }
+
+        // Llama a la función al cargar la página para mostrar la primera frase
+        mostrarFraseAleatoria();
+    </script>
+</body>
+</html>

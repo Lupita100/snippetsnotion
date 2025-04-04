@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pomodoro Configurable</title>
+    <link href="https://fonts.googleapis.com/css2?family=Arial+Black&display=swap" rel="stylesheet">
+    <style>
+body {
+  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #121212;
+  transition: background-color 0.3s ease;
+}
+body.pomodoro-running {
+  background-color: #121212;
+}
+body.short-break-running {
+  background-color: #172a3a;
+}
+body.long-break-running {
+  background-color: #2a1e1e;
+}
+.timer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #1f2937;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  transition: background-color 0.3s ease;
+  width: 80%;
+  max-width: 500px;
+  box-sizing: border-box;
+  border: 1px solid #374151;
+}
+.timer-container.pomodoro-running {
+  background-color: #1f2937;
+}
+.timer-container.short-break-running {
+  background-color: #1f2937;
+}
+.timer-container.long-break-running {
+  background-color: #1f2937;
+}
+.timer-title {
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: #f9fafb;
+  text-align: center;
+  opacity: 0.8;
+}
+.timer {
+  font-family: 'Arial Black', sans-serif;
+  font-size: 90px;
+  margin-top: 20px;
+  margin-bottom: 30px;
+  color: #ffffff;
+  letter-spacing: -5px;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+@media screen and (max-width: 600px) {
+  .timer {
+    font-size: 70px;
+  }
+}
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin-bottom: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.inputs-container {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.controls .input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-right: 0;
+  margin-bottom: 0;
+  width: 48%;
+  box-sizing: border-box;
+}
+.controls label {
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #d1d5db;
+  font-size: 0.9em;
+  display: block;
+  text-align: left;
+  opacity: 0.9;
+}
+.controls button {
+  padding: 12px 24px;
+  font-size: 18px;
+  margin: 5px 0;
+  cursor: pointer;
+  border: none;
+  border-radius: 10px;
+  background-color: #4CAF50;
+  color: #fff;
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.1s ease;
+  width: 100%;
+  box-sizing: border-box;
+  display: block;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+.controls button:hover {
+  background-color: #45a049;
+}
+.controls button:active {
+  background-color: #388e3c;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) inset;
+  transform: translateY(1px);
+}
+#reset {
+  background-color: transparent;
+  border: 2px solid #f44336;
+  color: #f44336;
+}
+#reset:hover {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+#reset:active {
+  background-color: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) inset;
+  transform: translateY(1px);
+}
+input[type="number"] {
+  padding: 10px;
+  font-size: 18px;
+  border: 1px solid #4a5568;
+  border-radius: 5px;
+  margin: 0;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  background-color: #2d3748;
+  box-sizing: border-box;
+}
+input[type="number"]:focus {
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.25);
+  outline: none;
+}
+.audio-controls {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+.audio-controls label {
+  margin-right: 10px;
+  font-size: 0.9em;
+  color: #d1d5db;
+  opacity: 0.9;
+}
+.audio-controls button {
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  background-color: #4a5568;
+  color: #fff;
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.1s ease;
+  margin: 0 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+.audio-controls button:hover {
+  background-color: #718096;
+}
+.audio-controls button:active {
+  background-color: #4a5568;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) inset;
+  transform: translateY(1px);
+}
+#mute-button.muted {
+  background-color: #2d3748;
+  color: #888;
+  border-color: #4a5568;
+}
+#mute-button.muted:hover {
+  background-color: #2d3748;
+}
+#mute-button.muted:active {
+  background-color: #2d3748;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) inset;
+  transform: translateY(1px);
+}
+    </style>
+  </head>
+  <body class="pomodoro-running">
+    <div class="timer-container pomodoro-running">
+      <h2 class="timer-title">Pomodoro</h2>
+      <div class="timer">25:00</div>
+      <div class="controls">
+        <div class="inputs-container">
+          <div class="input-group">
+            <label for="pomodoro-time">Pomodoro (min)</label>
+            <input type="number" id="pomodoro-time" value="25" min="1" aria-label="Tiempo de Pomodoro en minutos"/>
+          </div>
+          <div class="input-group">
+            <label for="short-break-time">Descanso Corto (min)</label>
+            <input type="number" id="short-break-time" value="5" min="1" aria-label="Tiempo de Descanso Corto en minutos"/>
+          </div>
+        </div>
+        <div class="inputs-container">
+          <div class="input-group">
+            <label for="long-break-time">Descanso Largo (min)</label>
+            <input type="number" id="long-break-time" value="15" min="1" aria-label="Tiempo de Descanso Largo en minutos"/>
+          </div>
+          <div class="input-group">
+            <label for="sessions-count">Intervalos hasta descanso largo</label>
+            <input type="number" id="sessions-count" value="4" min="1" aria-label="Intervalos de Pomodoro hasta el descanso largo"/>
+          </div>
+        </div>
+        <div class="button-group">
+          <button id="start">Comenzar</button>
+          <button id="pause">Pausar</button>
+          <button id="reset">Reset</button>
+        </div>
+      </div>
+      <div class="audio-controls">
+        <label for="mute-button">Sonido:</label>
+        <button id="mute-button">Mute</button>
+      </div>
+    </div>
+    <script>
+const timerDisplay = document.querySelector(".timer");
+const startButton = document.getElementById("start");
+const pauseButton = document.getElementById("pause");
+const resetButton = document.getElementById("reset");
+const pomodoroTimeInput = document.getElementById("pomodoro-time");
+const shortBreakTimeInput = document.getElementById("short-break-time");
+const longBreakTimeInput = document.getElementById("long-break-time");
+const sessionsCountInput = document.getElementById("sessions-count");
+const body = document.body;
+const timerContainer = document.querySelector(".timer-container");
+const muteButton = document.getElementById("mute-button");
+let pomodoroTime = pomodoroTimeInput.value;
+let shortBreakTime = shortBreakTimeInput.value;
+let longBreakTime = longBreakTimeInput.value;
+let sessionsCount = sessionsCountInput.value;
+let timeLeft;
+let timerInterval;
+let sessions = 0;
+let isPaused = false;
+let isMuted = false;
+let isRunning = false;
+let currentPhase = "pomodoro";
+let currentSession = 1;
+pomodoroTimeInput.addEventListener("change", (e) => {
+  pomodoroTime = parseInt(e.target.value);
+  if (!isRunning && currentPhase === 'pomodoro') {
+    timeLeft = pomodoroTime * 60;
+    updateTimerDisplay();
+  }
+});
+shortBreakTimeInput.addEventListener("change", (e) => {
+  shortBreakTime = parseInt(e.target.value);
+  if (!isRunning && currentPhase === 'short-break') {
+    timeLeft = shortBreakTime * 60;
+    updateTimerDisplay();
+  }
+});
+longBreakTimeInput.addEventListener("change", (e) => {
+  longBreakTime = parseInt(e.target.value);
+  if (!isRunning && currentPhase === 'long-break') {
+    timeLeft = longBreakTime * 60;
+    updateTimerDisplay();
+  }
+});
+sessionsCountInput.addEventListener("change", (e) => {
+  sessionsCount = parseInt(e.target.value);
+});
+muteButton.addEventListener("click", () => {
+  isMuted = !isMuted;
+  muteButton.classList.toggle("muted", isMuted);
+});
+function playAlarm() {
+  if (!isMuted) {
+    const audio = new Audio("https://www.soundjay.com/buttons/sounds/beep-01a.mp3");
+    audio.play();
+  }
+}
+function startTimer() {
+  if (isRunning) return;
+  isRunning = true;
+  isPaused = false;
+  if (currentPhase === "pomodoro") {
+    if (!timeLeft) timeLeft = pomodoroTime * 60;
+    body.classList.add("pomodoro-running");
+    body.classList.remove("short-break-running", "long-break-running");
+    timerContainer.classList.add("pomodoro-running");
+    timerContainer.classList.remove("short-break-running", "long-break-running");
+  } else if (currentPhase === "short-break") {
+    if (!timeLeft) timeLeft = shortBreakTime * 60;
+    body.classList.add("short-break-running");
+    body.classList.remove("pomodoro-running", "long-break-running");
+    timerContainer.classList.add("short-break-running");
+    timerContainer.classList.remove("pomodoro-running", "long-break-running");
+  } else if (currentPhase === "long-break") {
+    if (!timeLeft) timeLeft = longBreakTime * 60;
+    body.classList.add("long-break-running");
+    body.classList.remove("pomodoro-running", "short-break-running");
+    timerContainer.classList.add("long-break-running");
+    timerContainer.classList.remove("pomodoro-running", "short-break-running");
+  }
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    if (timeLeft > 0) {
+      timeLeft--;
+      updateTimerDisplay();
+    } else {
+      clearInterval(timerInterval);
+      isRunning = false;
+      playAlarm();
+      if (currentPhase === "pomodoro") {
+        sessions++;
+        if (sessions < sessionsCount) {
+          currentPhase = "short-break";
+        } else {
+          currentPhase = "long-break";
+          sessions = 0;
+          currentSession = 1;
+        }
+      } else if (currentPhase === "short-break") {
+        currentPhase = "pomodoro";
+        currentSession++;
+      } else if (currentPhase === "long-break") {
+        currentPhase = "pomodoro";
+        currentSession = 1;
+      }
+      startTimer();
+    }
+  }, 1000);
+}
+function pauseTimer() {
+  if (!isRunning) return;
+  isRunning = false;
+  isPaused = true;
+  clearInterval(timerInterval);
+}
+function resetTimer() {
+  clearInterval(timerInterval);
+  isRunning = false;
+  isPaused = false;
+  sessions = 0;
+  currentSession = 1;
+  currentPhase = "pomodoro";
+  body.classList.remove("short-break-running", "long-break-running");
+  body.classList.add("pomodoro-running");
+  timerContainer.classList.remove("short-break-running", "long-break-running");
+  timerContainer.classList.add("pomodoro-running");
+  timeLeft = pomodoroTime * 60;
+  updateTimerDisplay();
+}
+function updateTimerDisplay() {
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  const formattedTime = `${minutes.toString().padStart(2, "0")}:${seconds
+    .toString()
+    .padStart(2, "0")}`;
+  timerDisplay.textContent = formattedTime;
+  let titleText = "";
+  if (currentPhase === "pomodoro") {
+    titleText = `Pomodoro - Intervalo ${currentSession}/${sessionsCount}`;
+  } else if (currentPhase === "short-break") {
+    titleText = "Descanso Corto";
+  } else if (currentPhase === "long-break") {
+    titleText = "Descanso Largo";
+  }
+  document.querySelector(".timer-title").textContent = titleText;
+  document.title = titleText + " - Pomodoro Timer";
+}
+startButton.addEventListener("click", startTimer);
+pauseButton.addEventListener("click", pauseTimer);
+resetButton.addEventListener("click", resetTimer);
+timeLeft = pomodoroTime * 60;
+updateTimerDisplay();
+    </script>
+  </body>
+</html>
