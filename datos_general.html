@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4">
+    <div class="max-w-3xl w-full space-y-8">
+        <div class="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-6">
+            <div class="flex items-center gap-2 mb-4" id="category-icon">
+                </div>
+            <h2 class="text-2xl font-semibold text-white mb-2" id="fact-category">
+            </h2>
+            <p class="text-lg sm:text-xl text-gray-200" id="fact-text">
+            </p>
+            <div class="mt-6 flex justify-center">
+                <button id="new-fact-button" class="bg-gradient-to-r text-white px-6 py-3 rounded-full hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-opacity-50">
+                    Otro Dato Curioso
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Array de datos curiosos
+        const initialFacts = [
+            { text: "La velocidad de la luz en el vacío es de aproximadamente 299,792,458 metros por segundo.", category: "Física" },
+            { text: "El número pi (π) es la relación entre la circunferencia de un círculo y su diámetro.", category: "Matemáticas" },
+            { text: "La teoría de la relatividad de Einstein cambió nuestra comprensión del espacio, el tiempo y la gravedad.", category: "Física" },
+            { text: "El cero es un número y también un concepto matemático fundamental.", category: "Matemáticas" },
+            { text: "La dualidad onda-partícula establece que la luz y la materia exhiben propiedades tanto de ondas como de partículas.", category: "Física" },
+            { text: "Los números primos son aquellos que solo son divisibles por 1 y por sí mismos.", category: "Matemáticas" },
+            { text: "La entropía es una medida del desorden o aleatoriedad en un sistema.", category: "Física" },
+            { text: "El teorema de Pitágoras relaciona los lados de un triángulo rectángulo: a² + b² = c².", category: "Matemáticas" },
+            { text: "La gravedad es la fuerza que atrae a los objetos con masa entre sí.", category: "Física" },
+            { text: "El concepto de infinito ha sido estudiado por matemáticos durante siglos.", category: "Matemáticas" }
+        ];
+        /**
+         * Obtiene un dato curioso aleatorio del array.
+         * @param {Array} facts - El array de datos curiosos.
+         * @returns {object} - Un objeto con las propiedades text y category, o un objeto con un mensaje de error si no hay datos disponibles.
+         */
+        function getRandomFact(facts) {
+            if (facts.length === 0) {
+                return { text: "No hay datos curiosos disponibles.", category: "Indefinido" };
+            }
+            const randomIndex = Math.floor(Math.random() * facts.length);
+            return facts[randomIndex];
+        }
+        // Obtener elementos del DOM
+        const factTextElement = document.getElementById("fact-text");
+        const factCategoryElement = document.getElementById("fact-category");
+        const newFactButton = document.getElementById("new-fact-button");
+        const categoryIconElement = document.getElementById("category-icon");
+        /**
+         * Muestra un dato curioso en la página.
+         * @param {object} fact - El dato curioso a mostrar (objeto con propiedades text y category).
+         */
+        function displayFact(fact) {
+            factTextElement.textContent = fact.text;
+            factCategoryElement.textContent = fact.category;
+             // Actualizar el icono según la categoría
+            categoryIconElement.innerHTML = ''; // Limpiar el contenedor de iconos
+            const icon = document.createElement('div');
+            icon.classList.add("w-6", "h-6");
+            if (fact.category === 'Física') {
+                icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flask-conical text-blue-400"><path d="M11.7 2.7a1 1 0 0 1 .6 1.5H13v7.3a4 4 0 0 1-4 4v3.8a1 1 0 0 1-2 0V16a4 4 0 0 1-4-4V4.2h.7a1 1 0 0 1 .6-1.5ZM6 8h12M6 12h12"/></svg>`;
+            } else if (fact.category === 'Matemáticas') {
+                icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-infinity text-purple-400"><path d="M4 12a8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8 8 8 0 0 1-8-8Z"/></svg>`;
+            }
+            categoryIconElement.appendChild(icon);
+        }
+        // Mostrar un dato curioso inicial al cargar la página
+        const initialFact = getRandomFact(initialFacts);
+        displayFact(initialFact);
+        // Manejador de evento para el botón "Otro Dato Curioso"
+        newFactButton.addEventListener("click", () => {
+            const newFact = getRandomFact(initialFacts);
+            displayFact(newFact);
+        });
+    </script>
+</body>
+</html>
