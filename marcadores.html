@@ -275,10 +275,10 @@
         }
 
         function deleteBookmark(id) {
-            if (confirm('¿Estás seguro de que quieres eliminar este marcador?')) {
+            
                 bookmarks = bookmarks.filter(bookmark => bookmark.id !== id);
                 saveBookmarks(); renderBookmarks();
-            }
+            
         }
 
         function openEditModal(id) {
