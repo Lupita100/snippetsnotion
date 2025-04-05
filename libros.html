@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Libros Registrados</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        /* Estilos tarjeta y modal */
+        .book-card { /* Renombrado para claridad */
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            overflow: hidden;
+        }
+        .book-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
+        .modal-content { margin: auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; }
+        .modal.active { display: flex; }
+        /* Estilo imagen portada */
+        .cover-container img { /* Renombrado para claridad */
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Mantiene proporción, puede cortar */
+            /* object-fit: contain; */ /* Muestra completa, puede dejar espacios */
+        }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        /* Ajuste para textarea */
+        textarea { min-height: 80px; }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center text-teal-400">Mis Libros</h1>
+
+        <form id="add-book-form" class="bg-gray-800 p-6 rounded-lg shadow-md mb-8">
+             <h2 class="text-xl font-semibold mb-4 text-gray-100">Agregar Nuevo Libro</h2>
+            <div class="mb-4">
+                <label for="book-title" class="block text-sm font-medium text-gray-300 mb-1">Título:</label>
+                <input type="text" id="book-title" name="title" required
+                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                       placeholder="Título del libro">
+            </div>
+             <div class="mb-4">
+                <label for="book-author" class="block text-sm font-medium text-gray-300 mb-1">Autor:</label>
+                <input type="text" id="book-author" name="author" required
+                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                       placeholder="Nombre del autor">
+            </div>
+             <div class="mb-4">
+                <label for="book-image-url" class="block text-sm font-medium text-gray-300 mb-1">URL de la Imagen de Portada:</label>
+                <input type="url" id="book-image-url" name="imageUrl"
+                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                       placeholder="https://ejemplo.com/portada.jpg">
+                 <p class="text-xs text-gray-400 mt-1">Pega aquí la URL de la imagen de la portada.</p>
+            </div>
+             <div class="mb-4">
+                <label for="book-description" class="block text-sm font-medium text-gray-300 mb-1">Descripción:</label>
+                <textarea id="book-description" name="description" rows="3"
+                          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          placeholder="Escribe una breve descripción o notas..."></textarea>
+            </div>
+             <div class="mb-4">
+                <label for="book-url" class="block text-sm font-medium text-gray-300 mb-1">URL (Opcional):</label>
+                <input type="url" id="book-url" name="url"
+                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                       placeholder="https://ejemplo.com/tienda-o-resena">
+            </div>
+            <div class="mb-4">
+                <label for="book-tags" class="block text-sm font-medium text-gray-300 mb-1">Etiquetas (separadas por comas):</label>
+                <input type="text" id="book-tags" name="tags"
+                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                       placeholder="ficción, pendiente, favorito">
+            </div>
+            <button type="submit" id="add-book-btn"
+                    class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="16"/><line x1="8" x2="16" y1="12" y2="12"/></svg>
+                <span>Agregar Libro</span>
+            </button>
+        </form>
+
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div class="flex-grow">
+                <label for="filter-tags" class="block text-sm font-medium text-gray-300 mb-1">Filtrar por Etiquetas (separadas por comas):</label>
+                <input type="text" id="filter-tags"
+                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                       placeholder="Escribe etiquetas para filtrar...">
+                 <p class="text-xs text-gray-400 mt-1">Mostrará libros que contengan TODAS las etiquetas escritas.</p>
+            </div>
+            <div class="flex-shrink-0">
+                 <button id="download-btn"
+                         class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                     <span>Descargar JSON</span>
+                 </button>
+            </div>
+        </div>
+
+        <div id="books-list" class="space-y-4"> <p id="no-books-message" class="text-gray-500 italic col-span-full text-center hidden">No hay libros registrados todavía.</p> </div>
+    </div>
+
+    <div id="edit-modal" class="modal">
+        <div class="modal-content bg-gray-800 shadow-xl rounded-lg">
+            <h2 class="text-xl font-semibold mb-4 text-gray-100">Editar Libro</h2>
+            <form id="edit-book-form"> <input type="hidden" id="edit-book-id"> <div class="mb-4">
+                    <label for="edit-book-title" class="block text-sm font-medium text-gray-300 mb-1">Título:</label>
+                    <input type="text" id="edit-book-title" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+                 <div class="mb-4">
+                    <label for="edit-book-author" class="block text-sm font-medium text-gray-300 mb-1">Autor:</label>
+                    <input type="text" id="edit-book-author" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+                 <div class="mb-4">
+                    <label for="edit-book-image-url" class="block text-sm font-medium text-gray-300 mb-1">URL de Imagen:</label>
+                    <input type="url" id="edit-book-image-url" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+                 <div class="mb-4">
+                    <label for="edit-book-description" class="block text-sm font-medium text-gray-300 mb-1">Descripción:</label>
+                    <textarea id="edit-book-description" rows="3" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"></textarea>
+                </div>
+                 <div class="mb-4">
+                    <label for="edit-book-url" class="block text-sm font-medium text-gray-300 mb-1">URL (Opcional):</label>
+                    <input type="url" id="edit-book-url" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+                <div class="mb-4">
+                    <label for="edit-book-tags" class="block text-sm font-medium text-gray-300 mb-1">Etiquetas (separadas por comas):</label>
+                    <input type="text" id="edit-book-tags" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancel-edit-btn"
+                            class="bg-gray-600 hover:bg-gray-700 text-gray-200 font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                            class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- Elementos del DOM ---
+        const addForm = document.getElementById('add-book-form');
+        const booksList = document.getElementById('books-list'); // Renombrado
+        const filterInput = document.getElementById('filter-tags');
+        const noBooksMessage = document.getElementById('no-books-message'); // Renombrado
+        const editModal = document.getElementById('edit-modal');
+        const editForm = document.getElementById('edit-book-form'); // Renombrado
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const downloadBtn = document.getElementById('download-btn');
+
+        // --- Estado ---
+        let books = []; // Renombrado
+
+        // --- Constantes ---
+        // Placeholder con proporción más adecuada para libros
+        const BOOK_PLACEHOLDER_IMG = 'https://placehold.co/160x240/374151/6b7280?text=Libro';
+
+        // --- Funciones ---
+
+        function loadBooks() { // Renombrado
+            const storedBooks = localStorage.getItem('booksApp'); // Clave diferente
+            books = storedBooks ? JSON.parse(storedBooks) : [];
+            renderBooks();
+        }
+
+        function saveBooks() { // Renombrado
+            localStorage.setItem('booksApp', JSON.stringify(books));
+        }
+
+        function isValidUrl(string) { // Se mantiene para URL opcional y URL de imagen
+            // Permite que esté vacío o sea una URL válida
+            if (!string) return true; // Vacío es válido para campos opcionales
+            try { new URL(string); return true; } catch (_) { return false; }
+        }
+
+        function renderBooks() { // Renombrado y adaptado
+            booksList.innerHTML = '';
+            const filterText = filterInput.value.trim().toLowerCase();
+            let filteredBooks = books; // Renombrado
+            const filterTags = filterText ? filterText.split(',').map(tag => tag.trim()).filter(tag => tag !== '') : [];
+
+            if (filterTags.length > 0) {
+                filteredBooks = books.filter(book => { // Renombrado
+                    const bookTagsLower = book.tags.map(t => t.toLowerCase());
+                    return filterTags.every(ft => bookTagsLower.includes(ft));
+                });
+            }
+
+            downloadBtn.disabled = books.length === 0;
+
+            noBooksMessage.classList.toggle('hidden', books.length > 0);
+            if (books.length === 0) { noBooksMessage.textContent = 'No hay libros registrados todavía.'; }
+            else if (filteredBooks.length === 0 && filterTags.length > 0) {
+                noBooksMessage.textContent = `No hay libros que coincidan con todas las etiquetas: ${filterTags.join(', ')}.`;
+                noBooksMessage.classList.remove('hidden');
+            } else { noBooksMessage.classList.add('hidden'); }
+
+            filteredBooks.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+
+            filteredBooks.forEach(book => { // Renombrado
+                const card = document.createElement('div');
+                card.className = 'book-card bg-gray-800 rounded-lg shadow-md flex flex-col md:flex-row items-stretch';
+                card.dataset.id = book.id;
+
+                // Usa la URL de imagen del libro o el placeholder
+                const coverImageUrl = book.imageUrl || BOOK_PLACEHOLDER_IMG;
+                const hasOptionalUrl = book.url && isValidUrl(book.url);
+
+                // Contenido Izquierdo (Info del Libro)
+                const leftContent = document.createElement('div');
+                leftContent.className = 'p-4 flex flex-col justify-between flex-grow'; // justify-between para espacio
+
+                // Título y Autor
+                const titleHTML = `<h3 class="text-lg font-semibold mb-0 text-gray-100 break-words">${book.title}</h3>`;
+                const authorHTML = `<p class="text-sm text-gray-400 mb-2">por ${book.author}</p>`;
+
+                // Descripción (acortada si es muy larga, opcional)
+                 // Mostrar solo las primeras ~150 caracteres de la descripción
+                const shortDescription = book.description ? (book.description.length > 150 ? book.description.substring(0, 150) + '...' : book.description) : '';
+                const descriptionHTML = shortDescription ? `<p class="text-sm text-gray-300 mb-3">${shortDescription}</p>` : '';
+
+
+                // URL Opcional (si existe y es válida)
+                const optionalUrlHTML = hasOptionalUrl
+                   ? `<a href="${book.url}" target="_blank" rel="noopener noreferrer" class="text-xs text-teal-400 hover:text-teal-300 hover:underline break-all mb-2 inline-block" title="${book.url}">Enlace adicional...</a>`
+                   : '';
+
+                // Etiquetas y Botones (similar a antes)
+                const tagsHTML = book.tags.length > 0 ? `<div class="flex flex-wrap gap-1 mb-2">${book.tags.map(tag => `<span class="bg-teal-800 text-teal-100 text-xs font-semibold px-2 py-0.5 rounded">${tag.trim()}</span>`).join('')}</div>` : '<div class="mb-2 h-5"></div>';
+                const buttonsHTML = `<div class="flex justify-start space-x-2 mt-auto"><button class="edit-btn p-1 text-blue-400 hover:text-blue-300" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button><button class="delete-btn p-1 text-red-400 hover:text-red-300" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button></div>`;
+
+                // Ensamblar contenido izquierdo
+                leftContent.innerHTML = `
+                    <div>
+                        ${titleHTML}
+                        ${authorHTML}
+                        ${descriptionHTML}
+                        ${optionalUrlHTML ? `<div>${optionalUrlHTML}</div>` : ''}
+                    </div>
+                    <div class="mt-auto">
+                        ${tagsHTML}
+                        ${buttonsHTML}
+                    </div>
+                `;
+
+                // Contenido Derecho (Imagen Portada)
+                const rightContent = document.createElement('div');
+                // Ajustar ancho/alto para proporción de libro (ej. w-32 o w-40, h-auto)
+                rightContent.className = 'cover-container flex-shrink-0 w-full md:w-32 lg:w-40 h-48 md:h-auto bg-gray-700 rounded-b-lg md:rounded-l-none md:rounded-r-lg';
+                const img = document.createElement('img');
+                img.src = coverImageUrl;
+                img.alt = `Portada de ${book.title}`;
+                img.className = 'rounded-b-lg md:rounded-l-none md:rounded-r-lg';
+                img.onerror = function() { this.src = BOOK_PLACEHOLDER_IMG; this.alt = 'Portada no disponible'; };
+                rightContent.appendChild(img);
+
+                card.appendChild(leftContent);
+                card.appendChild(rightContent);
+
+                card.querySelector('.edit-btn').addEventListener('click', () => openEditModal(book.id));
+                card.querySelector('.delete-btn').addEventListener('click', () => deleteBook(book.id)); // Renombrado
+
+                booksList.appendChild(card);
+            });
+        }
+
+        /**
+         * Agrega un nuevo libro.
+         */
+        function addBook(event) { // Renombrado
+            event.preventDefault();
+            // Obtener valores del formulario
+            const title = document.getElementById('book-title').value.trim();
+            const author = document.getElementById('book-author').value.trim();
+            const imageUrl = document.getElementById('book-image-url').value.trim();
+            const description = document.getElementById('book-description').value.trim();
+            const url = document.getElementById('book-url').value.trim(); // URL opcional
+            const tags = document.getElementById('book-tags').value.split(',')
+                                    .map(tag => tag.trim().toLowerCase())
+                                    .filter(tag => tag !== '');
+
+            // Validación básica (título y autor requeridos)
+            if (!title || !author) {
+                alert("El título y el autor son obligatorios.");
+                return;
+            }
+             // Validación simple de URL de imagen (si se proporciona)
+            if (imageUrl && !isValidUrl(imageUrl)) {
+                 alert("La URL de la imagen no parece ser válida.");
+                 return;
+            }
+             // Validación simple de URL opcional (si se proporciona)
+             if (url && !isValidUrl(url)) {
+                 alert("La URL opcional no parece ser válida.");
+                 return;
+             }
+
+            const newBook = { // Renombrado
+                id: Date.now().toString(),
+                title,
+                author,
+                imageUrl,
+                description,
+                url, // Incluye URL opcional
+                tags
+            };
+
+            books.push(newBook); // Renombrado
+            saveBooks(); // Renombrado
+            renderBooks(); // Renombrado
+            addForm.reset();
+        }
+
+        /**
+         * Elimina un libro por su ID.
+         */
+        function deleteBook(id) { // Renombrado
+            
+                books = books.filter(book => book.id !== id); // Renombrado
+                saveBooks(); // Renombrado
+                renderBooks(); // Renombrado
+            
+        }
+
+        /**
+         * Abre el modal de edición para un libro.
+         */
+        function openEditModal(id) {
+            const book = books.find(b => b.id === id); // Renombrado
+            if (!book) return;
+            // Poblar campos del modal
+            document.getElementById('edit-book-id').value = book.id;
+            document.getElementById('edit-book-title').value = book.title;
+            document.getElementById('edit-book-author').value = book.author;
+            document.getElementById('edit-book-image-url').value = book.imageUrl;
+            document.getElementById('edit-book-description').value = book.description;
+            document.getElementById('edit-book-url').value = book.url;
+            document.getElementById('edit-book-tags').value = book.tags.join(', ');
+            editModal.classList.add('active');
+        }
+
+        function closeEditModal() {
+            editModal.classList.remove('active'); editForm.reset();
+        }
+
+        /**
+         * Guarda los cambios del modal de edición para un libro.
+         */
+        function saveEditedBook(event) { // Renombrado
+            event.preventDefault();
+            const id = document.getElementById('edit-book-id').value;
+            // Obtener todos los valores del modal
+            const title = document.getElementById('edit-book-title').value.trim();
+            const author = document.getElementById('edit-book-author').value.trim();
+            const imageUrl = document.getElementById('edit-book-image-url').value.trim();
+            const description = document.getElementById('edit-book-description').value.trim();
+            const url = document.getElementById('edit-book-url').value.trim();
+            const tags = document.getElementById('edit-book-tags').value.split(',')
+                               .map(tag => tag.trim().toLowerCase())
+                               .filter(tag => tag !== '');
+
+            if (!title || !author) { // Validación básica
+                 alert("El título y el autor son obligatorios.");
+                 return;
+            }
+             if (imageUrl && !isValidUrl(imageUrl)) {
+                 alert("La URL de la imagen no parece ser válida.");
+                 return;
+             }
+             if (url && !isValidUrl(url)) {
+                 alert("La URL opcional no parece ser válida.");
+                 return;
+             }
+
+
+            const index = books.findIndex(b => b.id === id); // Renombrado
+            if (index !== -1) {
+                // Actualizar el objeto libro
+                books[index] = { id, title, author, imageUrl, description, url, tags }; // Renombrado
+                saveBooks(); // Renombrado
+                renderBooks(); // Renombrado
+                closeEditModal();
+            }
+        }
+
+        /**
+         * Descarga los libros actuales como un archivo JSON.
+         */
+        function downloadBooks() { // Renombrado
+            if (books.length === 0) {
+                alert("No hay libros para descargar.");
+                return;
+            }
+            const jsonString = JSON.stringify(books, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const objectUrl = URL.createObjectURL(blob); // Renombrado variable url a objectUrl
+            const a = document.createElement('a');
+            a.href = objectUrl;
+            a.download = 'mis_libros.json'; // Nombre de archivo cambiado
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(objectUrl);
+        }
+
+
+        // --- Event Listeners ---
+        addForm.addEventListener('submit', addBook); // Renombrado
+        filterInput.addEventListener('input', renderBooks); // Renombrado
+        editForm.addEventListener('submit', saveEditedBook); // Renombrado
+        cancelEditBtn.addEventListener('click', closeEditModal);
+        editModal.addEventListener('click', (event) => { if (event.target === editModal) closeEditModal(); });
+        downloadBtn.addEventListener('click', downloadBooks); // Renombrado
+
+        // --- Inicialización ---
+        document.addEventListener('DOMContentLoaded', loadBooks); // Renombrado
+
+    </script>
+
+</body>
+</html>
