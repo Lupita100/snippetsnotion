@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flowtime Timer (Solo Sonido)</title>
+    <title>Flowtime Timer (Preciso)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -75,27 +75,111 @@
             <input type="number" id="alertInterval" value="25" min="1" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center">
         </div>
 
-        </div>
+    </div>
 
     <script>
+        // --- Código del Web Worker ---
+        // Se define como un string para luego crear un Blob URL
+        const workerCode = `
+            let timerInterval = null;
+            let totalSeconds = 0;
+            let isPaused = true; // Inicia pausado
+
+            // Función principal del temporizador dentro del worker
+            function timerTick() {
+                if (!isPaused) {
+                    totalSeconds++;
+                    // Enviar el tiempo actual al hilo principal
+                    postMessage({ type: 'tick', currentTime: totalSeconds });
+                }
+            }
+
+            // Escucha mensajes del hilo principal
+            self.onmessage = function(e) {
+                const command = e.data.command;
+
+                switch(command) {
+                    case 'start':
+                        if (isPaused) {
+                            isPaused = false;
+                            if (!timerInterval) {
+                                // Iniciar el intervalo si no existe
+                                timerInterval = setInterval(timerTick, 1000);
+                            }
+                        }
+                        break;
+                    case 'pause':
+                        if (!isPaused) {
+                            isPaused = true;
+                            // No detenemos el intervalo, solo pausamos el incremento
+                            // clearInterval(timerInterval);
+                            // timerInterval = null;
+                        }
+                        break;
+                    case 'reset':
+                        isPaused = true;
+                        totalSeconds = 0;
+                        // Detener intervalo existente al resetear
+                        if (timerInterval) {
+                            clearInterval(timerInterval);
+                            timerInterval = null;
+                        }
+                        // Enviar estado reseteado al hilo principal
+                        postMessage({ type: 'reset', currentTime: 0 });
+                        break;
+                }
+            };
+        `;
+
+        // --- Código del Hilo Principal ---
+
         // Elementos del DOM
         const timerDisplay = document.getElementById('timerDisplay');
         const startButton = document.getElementById('startButton');
         const pauseButton = document.getElementById('pauseButton');
         const resetButton = document.getElementById('resetButton');
         const alertIntervalInput = document.getElementById('alertInterval');
-        // Variables de notificación eliminadas
 
-        // Estado del temporizador
-        let timerInterval = null;
-        let totalSeconds = 0;
-        let lastAlertSecond = 0;
-        let isPaused = false;
+        // Estado del hilo principal (para UI)
+        let lastAlertSecond = 0; // Para evitar sonidos duplicados
+        let worker = null; // Referencia al Web Worker
 
         // Sonido de alerta con Tone.js
         const synth = new Tone.Synth().toDestination();
 
-        // --- Funciones del Temporizador ---
+        // Crear e iniciar el Web Worker
+        try {
+            const blob = new Blob([workerCode], { type: 'application/javascript' });
+            worker = new Worker(URL.createObjectURL(blob));
+
+            // Escuchar mensajes del Worker
+            worker.onmessage = function(e) {
+                const data = e.data;
+                if (data.type === 'tick' || data.type === 'reset') {
+                    const currentTime = data.currentTime;
+                    // Actualizar el display
+                    updateDisplay(currentTime);
+                    // Comprobar si hay que alertar (solo si es 'tick')
+                    if (data.type === 'tick') {
+                         checkAlert(currentTime);
+                    }
+                }
+            };
+
+            worker.onerror = function(error) {
+                console.error("Error en el Web Worker:", error.message, error);
+                alert("Error al iniciar el temporizador de fondo. La precisión puede verse afectada.");
+                // Aquí podrías implementar un fallback al método anterior si lo deseas
+            };
+
+        } catch (error) {
+            console.error("No se pudo crear el Web Worker:", error);
+            alert("Tu navegador no soporta Web Workers o hubo un error. El temporizador podría no ser preciso en segundo plano.");
+            // Fallback o mensaje de error
+        }
+
+
+        // --- Funciones del Hilo Principal ---
 
         function formatTime(seconds) {
             const hours = Math.floor(seconds / 3600);
@@ -104,88 +188,77 @@
             return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         }
 
-        function updateDisplay() {
-            timerDisplay.textContent = formatTime(totalSeconds);
+        // Actualiza solo el display, el tiempo real viene del worker
+        function updateDisplay(currentTime) {
+            timerDisplay.textContent = formatTime(currentTime);
         }
 
         function startTimer() {
-            if (timerInterval) return;
-            // Ya no se comprueba permiso de notificación aquí
-            isPaused = false;
+            if (!worker) return; // Salir si el worker no se pudo crear
+            worker.postMessage({ command: 'start' });
+            // Actualizar UI
             startButton.disabled = true;
             pauseButton.disabled = false;
             resetButton.disabled = false;
             alertIntervalInput.disabled = true;
-            timerInterval = setInterval(() => {
-                totalSeconds++;
-                updateDisplay();
-                checkAlert();
-            }, 1000);
         }
 
         function pauseTimer() {
-            if (!timerInterval) return;
-            isPaused = true;
-            clearInterval(timerInterval);
-            timerInterval = null;
+            if (!worker) return;
+            worker.postMessage({ command: 'pause' });
+            // Actualizar UI
             startButton.disabled = false;
             pauseButton.disabled = true;
+            // Reset sigue habilitado para poder reiniciar desde pausa
         }
 
         function resetTimer() {
-            pauseTimer();
-            totalSeconds = 0;
-            lastAlertSecond = 0;
-            isPaused = false;
-            updateDisplay();
+            if (!worker) return;
+            worker.postMessage({ command: 'reset' });
+            // Actualizar UI inmediatamente (el worker enviará un mensaje 'reset' también)
+            updateDisplay(0); // Poner a 0 visualmente
+            lastAlertSecond = 0; // Reiniciar el tracker de alertas
             startButton.disabled = false;
             pauseButton.disabled = true;
             resetButton.disabled = true;
             alertIntervalInput.disabled = false;
-            // Ya no se restablece estado de notificación aquí
         }
 
-        // --- Lógica de Alertas ---
+        // --- Lógica de Alertas (en Hilo Principal) ---
 
-        function checkAlert() {
+        // Comprueba la alerta usando el tiempo recibido del worker
+        function checkAlert(currentTime) {
             const intervalMinutes = parseInt(alertIntervalInput.value, 10);
             if (isNaN(intervalMinutes) || intervalMinutes <= 0) return;
             const intervalSeconds = intervalMinutes * 60;
-            if (totalSeconds > 0 && totalSeconds % intervalSeconds === 0 && totalSeconds !== lastAlertSecond) {
-                lastAlertSecond = totalSeconds;
-                console.log(`Alerta sonora activada: intervalo de ${intervalMinutes} minutos alcanzado.`); // Mensaje en consola
-                // Solo reproduce sonido
+
+            // Comprueba si hemos alcanzado un múltiplo del intervalo
+            // y si no hemos alertado ya en este segundo exacto
+            if (currentTime > 0 && currentTime % intervalSeconds === 0 && currentTime !== lastAlertSecond) {
+                lastAlertSecond = currentTime; // Marcar este segundo como alertado
+                console.log(`Alerta sonora activada: intervalo de ${intervalMinutes} minutos alcanzado (Tiempo Worker: ${currentTime}).`);
                 playSound();
             }
         }
 
         function playSound() {
-            // Intenta reproducir sonido (ya no depende del permiso de notificación)
             Tone.start().then(() => {
-                // --- CONFIGURACIÓN DEL SONIDO ---
-                synth.volume.value = 9;
                 synth.triggerAttackRelease("C4", "0.5s");
-                // ---------------------------------
             }).catch(error => {
                 console.error("Error al iniciar Tone.js o reproducir sonido:", error);
-                // Ya no se actualiza el estado de notificación
             });
         }
-
-        // Funciones sendNotification, requestNotificationPermission y checkNotificationPermission eliminadas
 
         // --- Event Listeners ---
         startButton.addEventListener('click', startTimer);
         pauseButton.addEventListener('click', pauseTimer);
         resetButton.addEventListener('click', resetTimer);
-        // Listener para el botón de notificación eliminado
 
         // --- Inicialización ---
-        updateDisplay();
+        updateDisplay(0); // Mostrar 00:00:00 al inicio
         pauseButton.disabled = true;
         resetButton.disabled = true;
         alertIntervalInput.disabled = false;
-        // Llamada inicial a checkNotificationPermission eliminada
 
     </script>
 
