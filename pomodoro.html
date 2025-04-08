@@ -269,6 +269,7 @@ let isMuted = false;
 let isRunning = false;
 let currentPhase = "pomodoro";
 let currentSession = 1;
+let worker;
 pomodoroTimeInput.addEventListener("change", (e) => {
   pomodoroTime = parseInt(e.target.value);
   if (!isRunning && currentPhase === 'pomodoro') {
@@ -327,39 +328,97 @@ function startTimer() {
     timerContainer.classList.remove("pomodoro-running", "short-break-running");
   }
   updateTimerDisplay();
-  timerInterval = setInterval(() => {
-    if (timeLeft > 0) {
-      timeLeft--;
+  if (typeof Worker !== 'undefined') {
+    worker = new Worker(URL.createObjectURL(new Blob([`
+      let timeLeft;
+      let timerInterval;
+      self.onmessage = function(event) {
+        if (event.data.command === 'start') {
+          timeLeft = event.data.timeLeft;
+          timerInterval = setInterval(function() {
+            if (timeLeft > 0) {
+              timeLeft--;
+              self.postMessage({ time: timeLeft });
+            } else {
+              clearInterval(timerInterval);
+              self.postMessage({ time: 0, finished: true });
+            }
+          }, 1000);
+        } else if (event.data.command === 'pause') {
+          clearInterval(timerInterval);
+        } else if (event.data.command === 'reset') {
+          clearInterval(timerInterval);
+          timeLeft = event.data.timeLeft;
+          self.postMessage({ time: timeLeft });
+        }
+      };
+    `], { type: 'application/javascript' })));
+    worker.onmessage = function(event) {
+      timeLeft = event.data.time;
       updateTimerDisplay();
-    } else {
-      clearInterval(timerInterval);
-      isRunning = false;
-      playAlarm();
-      if (currentPhase === "pomodoro") {
-        sessions++;
-        if (sessions < sessionsCount) {
-          currentPhase = "short-break";
-        } else {
-          currentPhase = "long-break";
-          sessions = 0;
+      if (event.data.finished) {
+        clearInterval(timerInterval);
+        isRunning = false;
+        playAlarm();
+        if (currentPhase === "pomodoro") {
+          sessions++;
+          if (sessions < sessionsCount) {
+            currentPhase = "short-break";
+          } else {
+            currentPhase = "long-break";
+            sessions = 0;
+            currentSession = 1;
+          }
+        } else if (currentPhase === "short-break") {
+          currentPhase = "pomodoro";
+          currentSession++;
+        } else if (currentPhase === "long-break") {
+          currentPhase = "pomodoro";
           currentSession = 1;
         }
-      } else if (currentPhase === "short-break") {
-        currentPhase = "pomodoro";
-        currentSession++;
-      } else if (currentPhase === "long-break") {
-        currentPhase = "pomodoro";
-        currentSession = 1;
+        startTimer();
       }
-      startTimer();
-    }
-  }, 1000);
+    };
+    worker.postMessage({ command: 'start', timeLeft: timeLeft });
+  } else {
+    timerInterval = setInterval(() => {
+      if (timeLeft > 0) {
+        timeLeft--;
+        updateTimerDisplay();
+      } else {
+        clearInterval(timerInterval);
+        isRunning = false;
+        playAlarm();
+        if (currentPhase === "pomodoro") {
+          sessions++;
+          if (sessions < sessionsCount) {
+            currentPhase = "short-break";
+          } else {
+            currentPhase = "long-break";
+            sessions = 0;
+            currentSession = 1;
+          }
+        } else if (currentPhase === "short-break") {
+          currentPhase = "pomodoro";
+          currentSession++;
+        } else if (currentPhase === "long-break") {
+          currentPhase = "pomodoro";
+          currentSession = 1;
+        }
+        startTimer();
+      }
+    }, 1000);
+  }
 }
 function pauseTimer() {
   if (!isRunning) return;
   isRunning = false;
   isPaused = true;
-  clearInterval(timerInterval);
+  if (typeof Worker !== 'undefined') {
+    worker.postMessage({ command: 'pause' });
+  } else {
+    clearInterval(timerInterval);
+  }
 }
 function resetTimer() {
   clearInterval(timerInterval);
@@ -374,6 +433,9 @@ function resetTimer() {
   timerContainer.classList.add("pomodoro-running");
   timeLeft = pomodoroTime * 60;
   updateTimerDisplay();
+  if (typeof Worker !== 'undefined') {
+    worker.postMessage({ command: 'reset', timeLeft: timeLeft });
+  }
 }
 function updateTimerDisplay() {
   const minutes = Math.floor(timeLeft / 60);
