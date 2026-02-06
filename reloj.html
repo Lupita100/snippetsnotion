@@ -3,84 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reloj Digital</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>Reloj Minimalista Notion</title>
     <style>
-        body {
-            /*background-color: #121212;*/
-            color: #eee;
-            font-family: 'Roboto Mono', monospace;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+        /* Importamos una fuente minimalista (Inter) de Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;600&display=swap');
+
+        html, body {
+            height: 100%;
             margin: 0;
-           /* transition: background-color 0.5s ease; /* Transición suave para el tema oscuro */
+            padding: 0;
+            overflow: hidden; /* Evita barras de desplazamiento */
+            background-color: transparent; /* Fondo transparente */
         }
-        .container {
+
+        body {
             display: flex;
             flex-direction: column;
+            justify-content: center;
             align-items: center;
-            width: 90%;
-            max-width: 600px; /* Ancho máximo para el contenedor */
-            padding: 20px;
-            border-radius: 10px;
-            /* No es necesario el borde para un diseño minimalista, pero se puede agregar si se desea
-            border: 1px solid #444;
-            */
-            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            color: #ffffff; /* Texto blanco */
+            user-select: none; /* Evita que se seleccione el texto al arrastrar en Notion */
         }
+
+        #clock-container {
+            text-align: center;
+            /* Una sombra muy sutil para mejorar legibilidad si el fondo no es totalmente negro */
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+
         #time {
-            font-size: 5em;
-            font-weight: 700; /* Añadido para resaltar la hora */
-            letter-spacing: -0.05em;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.5); /* Sombra sutil para la hora */
-            margin-bottom: 0.5em;
-            text-align: center; /* Asegura que la hora esté centrada */
+            font-size: 4rem; /* Tamaño grande para la hora */
+            font-weight: 600;
+            letter-spacing: -2px;
+            line-height: 1;
+            margin-bottom: 5px;
         }
+
         #date {
-            font-size: 1.5em;
-            color: #aaa;
-            text-align: center; /* Asegura que la fecha esté centrada */
+            font-size: 1.2rem;
+            font-weight: 300;
+            opacity: 0.8; /* Un poco más suave que la hora */
+            text-transform: capitalize; /* Mayúscula inicial */
+            letter-spacing: 0.5px;
         }
-        @media screen and (max-width: 768px) {
-            #time {
-                font-size: 3.5em;
-            }
-            #date {
-                font-size: 1.2em;
-            }
-            .container {
-                padding: 15px;
-            }
-        }
-        @media screen and (max-width: 480px) {
-            #time {
-                font-size: 2.5em;
-            }
-            #date {
-                font-size: 1em;
-            }
+
+        /* Ajustes responsivos para bloques pequeños de Notion */
+        @media (max-width: 400px) {
+            #time { font-size: 2.5rem; }
+            #date { font-size: 0.9rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="time"></div>
-        <div id="date"></div>
+
+    <div id="clock-container">
+        <div id="time">--:--:--</div>
+        <div id="date">Cargando fecha...</div>
     </div>
+
     <script>
         function updateClock() {
             const now = new Date();
-            const time = now.toLocaleTimeString('es-ES', { hour12: false });
-            const day = now.toLocaleDateString('es-ES', { weekday: 'long' });
-            const date = now.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
-            const timeElement = document.getElementById('time');
-            const dateElement = document.getElementById('date');
-            timeElement.textContent = time;
-            dateElement.textContent = `${day} | ${date}`;
+
+            // Opciones para la hora (formato 24h, puedes cambiar hour12 a true si prefieres AM/PM)
+            const timeOptions = { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit', 
+                hour12: false 
+            };
+
+            // Opciones para la fecha (Ej: Viernes, 6 de febrero)
+            const dateOptions = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+
+            // Obtener cadenas localizadas en español
+            const timeString = now.toLocaleTimeString('es-ES', timeOptions);
+            const dateString = now.toLocaleDateString('es-ES', dateOptions);
+
+            // Actualizar el DOM
+            document.getElementById('time').textContent = timeString;
+            document.getElementById('date').textContent = dateString;
         }
+
+        // Actualizar inmediatamente y luego cada segundo
         updateClock();
         setInterval(updateClock, 1000);
     </script>
